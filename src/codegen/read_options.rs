@@ -122,7 +122,8 @@ fn generate_enum(input: &DeriveInput, tla: &TopLevelAttrs, en: &DataEnum) -> Res
     let (create_error_basket, handle_error, end_error) = if return_all_errors {
         (
             quote!{
-                let mut #error_basket: Vec<(&'static str, #BIN_ERROR)> = vec![];
+                extern crate alloc;
+                let mut #error_basket: alloc::vec::Vec<(&'static str, #BIN_ERROR)> = alloc::vec::Vec::new();
             },
             en.variants.iter().map(|variant|{
                 let name = variant.ident.to_string();
