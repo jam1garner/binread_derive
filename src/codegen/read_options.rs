@@ -342,7 +342,6 @@ fn generate_body(
 
         #(
             #save_position
-            #field_asserts
             let #name_args = (#passed_args_closure).clone();
             let #name_options = #new_options;
             
@@ -371,6 +370,7 @@ fn generate_body(
 
                     __binread__temp
                 } #possible_else;
+            #field_asserts
             #restore_position
         )*
 
