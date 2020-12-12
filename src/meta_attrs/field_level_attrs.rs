@@ -97,7 +97,7 @@ impl FieldLevelAttrs {
         // args type
         let args = get_fla_type!(attrs.Args);
         let args_tuple = get_fla_type!(attrs.ArgsTuple);
-        let _asserts = get_fla_type!(attrs.Assert);
+        let asserts = get_fla_type!(attrs.Assert);
 
         // expr type
         let calc = get_fla_type!(attrs.Calc);
@@ -147,8 +147,6 @@ impl FieldLevelAttrs {
             parse_with, args, args_tuple
         );
 
-        let assert = vec![];
-
         let args = if let Some(arg) = args_tuple {
             PassedArgs::Tuple(arg)
         } else {
@@ -183,7 +181,7 @@ impl FieldLevelAttrs {
             parse_with,
             map,
             args,
-            assert,
+            assert: asserts.into_iter().map(convert_assert).collect::<Result<_, _>>()?,
             magic,
         })
     }

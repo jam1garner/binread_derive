@@ -227,28 +227,6 @@ fn join_spans_err<S1, S2>(s1: &Vec<S1>, s2: &Vec<S2>, msg: &str) -> Result<(), C
     )))
 }
 
-fn convert_assert<K>(assert: &MetaList<K, Expr>) -> Result<Assert, CompileError>
-    where K: Parse + Spanned,
-{
-    let (cond, err) = match assert.fields[..] {
-        [ref cond] => {
-            (cond, None)
-        }
-        [ref cond, ref err] => {
-            (cond, Some(err))
-        }
-        _ => return SpanError::err(
-            assert.ident.span(),
-            ""
-        ).map_err(Into::into),
-    };
-
-    Ok(Assert(
-        cond.into_token_stream(),
-        err.map(ToTokens::into_token_stream)
-    ))
-}
-
 type TlaList = MetaAttrList<TopLevelAttr>;
 
 fn tlas_from_attribute(attr: &syn::Attribute) -> Result<TlaList, CompileError> {
