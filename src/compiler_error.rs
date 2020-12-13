@@ -10,7 +10,6 @@ pub enum CompileError {
 pub struct SpanError(pub Span, pub String);
 
 impl SpanError {
-    #[allow(dead_code)]
     pub fn new<E: Into<String>>(span: Span, err: E) -> Self {
         SpanError(span, err.into())
     }
