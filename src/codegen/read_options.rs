@@ -271,7 +271,6 @@ fn generate_struct(input: &DeriveInput, tla: &TopLevelAttrs, ds: &DataStruct) ->
     })
 }
 
-#[allow(unused_variables)]
 fn generate_body(
         tla: &TopLevelAttrs, field_attrs: &[FieldLevelAttrs], name: &[Ident], ty: Vec<&Type>
     ) -> Result<TokenStream, CompileError>
@@ -285,10 +284,10 @@ fn generate_body(
 
     // Repeat constants
     let repeat_read_method_ident = filter_by_ignore(&field_attrs, iter::repeat(READ_METHOD));
-    let repeat_options_ident = iter::repeat(OPTIONS);
+    let _repeat_options_ident = iter::repeat(OPTIONS);
     let repeat_reader_ident = iter::repeat(READER).take(count).collect::<Vec<_>>();
-    let repeat_opt_ident = iter::repeat(OPT);
-    let default = iter::repeat(DEFAULT);
+    let _repeat_opt_ident = iter::repeat(OPT);
+    let _default = iter::repeat(DEFAULT);
 
     let possible_set_offset = get_possible_set_offset(&field_attrs, &name_options);
 
