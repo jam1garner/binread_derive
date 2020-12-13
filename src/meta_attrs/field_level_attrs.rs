@@ -187,7 +187,7 @@ impl FieldLevelAttrs {
     }
 }
 
-fn get_only_first<'a, S: Spanned>(list: &'a Vec<S>, msg: &str) -> Result<Option<&'a S>, CompileError> {
+fn get_only_first<'a, S: Spanned>(list: &'a [S], msg: &str) -> Result<Option<&'a S>, CompileError> {
     if list.len() > 1 {
         let mut spans = list.iter().map(Spanned::span);
 

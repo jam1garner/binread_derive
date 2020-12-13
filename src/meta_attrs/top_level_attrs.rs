@@ -68,7 +68,7 @@ impl TopLevelAttrs {
         Self::from_attrs(&input.attrs)
     }
 
-    pub fn from_attrs(attrs: &Vec<syn::Attribute>) -> Result<Self, CompileError> {
+    pub fn from_attrs(attrs: &[syn::Attribute]) -> Result<Self, CompileError> {
         let attrs: Vec<TopLevelAttr> =
             attrs
                 .iter()
@@ -183,7 +183,7 @@ fn convert_import<K: Parse>(import: Option<&&MetaList<K, ImportArg>>, import_tup
     }
 }
 
-fn get_only_first<'a, S: Spanned>(list: &'a Vec<S>, msg: &str) -> Result<Option<&'a S>, CompileError> {
+fn get_only_first<'a, S: Spanned>(list: &'a [S], msg: &str) -> Result<Option<&'a S>, CompileError> {
     if list.len() > 1 {
         let mut spans = list.iter().map(Spanned::span);
 
@@ -210,7 +210,7 @@ fn first_span_true<S: Spanned>(vals: Vec<S>) -> SpannedValue<bool> {
     }
 }
 
-fn join_spans_err<S1, S2>(s1: &Vec<S1>, s2: &Vec<S2>, msg: &str) -> Result<(), CompileError>
+fn join_spans_err<S1, S2>(s1: &[S1], s2: &[S2], msg: &str) -> Result<(), CompileError>
     where S1: Spanned,
           S2: Spanned,
 {

@@ -273,7 +273,7 @@ fn generate_struct(input: &DeriveInput, tla: &TopLevelAttrs, ds: &DataStruct) ->
 
 #[allow(unused_variables)]
 fn generate_body(
-        tla: &TopLevelAttrs, field_attrs: &[FieldLevelAttrs], name: &Vec<Ident>, ty: Vec<&Type>
+        tla: &TopLevelAttrs, field_attrs: &[FieldLevelAttrs], name: &[Ident], ty: Vec<&Type>
     ) -> Result<TokenStream, CompileError>
 {
     let count = name.len();
