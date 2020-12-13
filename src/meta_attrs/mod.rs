@@ -124,3 +124,29 @@ fn convert_assert<K>(assert: &MetaList<K, Expr>) -> Result<Assert, CompileError>
         err.map(ToTokens::into_token_stream)
     ))
 }
+
+fn first_span_true(mut vals: impl Iterator<Item = impl Spanned>) -> SpannedValue<bool> {
+    if let Some(val) = vals.next() {
+        SpannedValue::new(
+            true,
+            val.span()
+        )
+    } else {
+        Default::default()
+    }
+}
+
+fn get_only_first<'a, S: Spanned>(list: impl Iterator<Item = &'a S>, msg: impl Into<String>) -> Result<Option<&'a S>, CompileError> {
+    let mut list = list.peekable();
+    let first = list.next();
+
+    if list.peek().is_none() {
+        Ok(first)
+    } else {
+        let span = list.map(Spanned::span).fold(Spanned::span(first.unwrap()), |x, y| x.join(y).unwrap());
+        Err(CompileError::SpanError(SpanError::new(
+            span,
+            msg
+        )))
+    }
+}
