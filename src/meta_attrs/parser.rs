@@ -121,10 +121,12 @@ pub struct ImportArgTuple {
 
 impl Parse for ImportArgTuple {
     fn parse(input: ParseStream) -> syn::Result<Self> {
+        let ident = input.parse()?;
         let content;
+        let parens = parenthesized!(content in input);
         Ok(ImportArgTuple {
-            ident: input.parse()?,
-            parens: parenthesized!(content in input),
+            ident,
+            parens,
             arg: content.parse()?
         })
     }
