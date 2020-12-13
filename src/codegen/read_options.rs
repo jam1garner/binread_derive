@@ -30,11 +30,7 @@ pub fn generate(input: &DeriveInput, tla: &TopLevelAttrs) -> Result<TokenStream,
 }
 
 fn no_variant_data(v: &Variant) -> bool {
-    if let Fields::Unit = v.fields {
-        true
-    } else {
-        false
-    }
+    matches!(v.fields, Fields::Unit)
 }
 
 fn magic_type_of(variant: &Variant) -> Option<(MagicType, TokenStream)> {
