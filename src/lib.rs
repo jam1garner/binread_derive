@@ -1,4 +1,4 @@
-#![allow(unused_imports, unused_macros)]
+#![allow(unused_imports)]
 extern crate proc_macro;
 
 use proc_macro::TokenStream;
