@@ -104,20 +104,7 @@ impl TopLevelAttrs {
 
         let magic = get_only_first(magics, "Cannot define multiple magic values")?;
 
-        // TODO: this is basically get_only_first, but for incompatible attributes
-        if imports.clone().next().is_some() && import_tuples.clone().next().is_some() {
-            let mut spans = imports
-                .map(Spanned::span)
-                .chain(import_tuples.map(Spanned::span));
-
-            let first = spans.next().unwrap();
-            let span = spans.fold(first, |x, y| x.join(y).unwrap());
-
-            return Err(CompileError::SpanError(SpanError::new(
-                span,
-                "Cannot mix import and import_tuple"
-            )));
-        }
+        check_mutually_exclusive(imports.clone(), import_tuples.clone(), "Cannot mix import and import_tuple")?;
 
         let import = get_only_first(imports, "Cannot define multiple sets of arguments")?;
         let import_tuple = get_only_first(import_tuples, "Cannot define multiple sets of tuple arguments")?;

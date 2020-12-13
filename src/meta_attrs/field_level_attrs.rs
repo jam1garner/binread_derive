@@ -113,20 +113,7 @@ impl FieldLevelAttrs {
         let seek_before = get_fla_type!(attrs.SeekBefore);
         let pad_size_to = get_fla_type!(attrs.PadSizeTo);
 
-        // TODO: This is basically get_only_first but for mutually incompatible attributes. refactor?
-        if args.clone().next().is_some() && args_tuple.clone().next().is_some() {
-            let mut spans = args
-                .map(Spanned::span)
-                .chain(args_tuple.map(Spanned::span));
-
-            let first = spans.next().unwrap();
-            let span = spans.fold(first, |x, y| x.join(y).unwrap());
-
-            return Err(CompileError::SpanError(SpanError::new(
-                span,
-                "Conflicting instances of args and args_tuple"
-            )));
-        }
+        check_mutually_exclusive(args.clone(), args_tuple.clone(), "Conflicting instances of args and args_tuple")?;
 
         macro_rules! only_first {
             ($($a:ident),*) => {

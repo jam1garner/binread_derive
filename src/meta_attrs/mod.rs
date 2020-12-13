@@ -102,6 +102,28 @@ pub enum MagicType {
     Verbatim
 }
 
+fn check_mutually_exclusive<'a, S1, S2, Iter1, Iter2>(a: Iter1, b: Iter2, msg: impl Into<String>) -> Result<(), CompileError>
+    where S1: Spanned + 'a,
+          S2: Spanned + 'a,
+          Iter1: Iterator<Item = &'a S1>,
+          Iter2: Iterator<Item = &'a S2>,
+{
+    let mut a = a.peekable();
+    let mut b = b.peekable();
+    if a.peek().is_some() && b.peek().is_some() {
+        let mut spans = a.map(Spanned::span).chain(b.map(Spanned::span));
+        let first = spans.next().unwrap();
+        let span = spans.fold(first, |x, y| x.join(y).unwrap());
+
+        Err(CompileError::SpanError(SpanError::new(
+            span,
+            msg
+        )))
+    } else {
+        Ok(())
+    }
+}
+
 fn convert_assert<K>(assert: &MetaList<K, Expr>) -> Result<Assert, CompileError>
     where K: Parse + Spanned,
 {
