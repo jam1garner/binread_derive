@@ -1,4 +1,3 @@
-#![allow(non_upper_case_globals)]
 ///! Utilities for helping sanitize macro
 use proc_macro2::{TokenStream, Ident};
 use quote::{quote, format_ident, ToTokens};
