@@ -348,7 +348,7 @@ fn generate_body(
                     #skip_before
                     #align_before
                     #pad_size_to_prep
-                    let __binread__temp = #possible_some(
+                    let __binread_temp = #possible_some(
                         #after_parse_applier(
                             #possible_immediate_derefs,
                             #maps(#possible_try_conversion(#repeat_read_method_ident(
@@ -364,7 +364,7 @@ fn generate_body(
                     #skip_after
                     #align_after
 
-                    __binread__temp
+                    __binread_temp
                 } #possible_else;
             #field_asserts
             #restore_position

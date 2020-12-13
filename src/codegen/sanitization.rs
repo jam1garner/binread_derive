@@ -53,7 +53,7 @@ pub static AFTER_PARSE_TRY: IdentStr = from_crate!(error::try_after_parse);
 pub static AFTER_PARSE_IDENTITY: IdentStr = from_crate!(error::identity_after_parse);
 pub static TRY_CONVERSION: IdentStr = from_crate!(error::try_conversion);
 
-pub static TEMP: IdentStr = IdentStr("__binread__temp");
+pub static TEMP: IdentStr = IdentStr("__binread_temp");
 pub static POS: IdentStr = IdentStr("__binread_generated_position_temp");
 
 
