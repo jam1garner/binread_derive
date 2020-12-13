@@ -45,7 +45,7 @@ impl PassedValues {
 #[derive(Debug, Clone)]
 pub enum Imports {
     List(Vec<Ident>, Vec<Type>),
-    Tuple(Ident, Type)
+    Tuple(Ident, Box<Type>)
 }
 
 impl Default for Imports {

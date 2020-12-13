@@ -32,7 +32,7 @@ parse_any!{
 
         // args type
         Import(MetaList<kw::import, ImportArg>),
-        ImportTuple(ImportArgTuple),
+        ImportTuple(Box<ImportArgTuple>),
         Assert(MetaList<kw::assert, Expr>),
         PreAssert(MetaList<kw::pre_assert, Expr>),
         Map(MetaFunc<kw::map>),

@@ -166,9 +166,9 @@ fn magic_to_tokens(magic: &&MetaLit<impl syn::parse::Parse>) -> TokenStream {
     }
 }
 
-fn convert_import<K: Parse>(import: Option<&&MetaList<K, ImportArg>>, import_tuple: Option<&&ImportArgTuple>) -> Option<Imports> {
+fn convert_import<K: Parse>(import: Option<&&MetaList<K, ImportArg>>, import_tuple: Option<impl AsRef<ImportArgTuple>>) -> Option<Imports> {
     if let Some(tuple) = import_tuple {
-        Some(Imports::Tuple(tuple.arg.ident.clone(), tuple.arg.ty.clone()))
+        Some(Imports::Tuple(tuple.as_ref().arg.ident.clone(), tuple.as_ref().arg.ty.clone().into()))
     } else if let Some(list) = import {
         let (idents, tys): (Vec<_>, Vec<_>) =
             list.fields
