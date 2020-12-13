@@ -76,8 +76,7 @@ impl TopLevelAttrs {
                 .map(tlas_from_attribute)
                 .collect::<Result<Vec<TlaList>, CompileError>>()?
                 .into_iter()
-                .map(|x| x.0.into_iter())
-                .flatten()
+                .flat_map(|x| x.0.into_iter())
                 .collect();
 
         Self::from_top_level_attrs(attrs)

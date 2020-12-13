@@ -72,8 +72,7 @@ impl FieldLevelAttrs {
                 .map(flas_from_attribute)
                 .collect::<Result<Vec<FlaList>, CompileError>>()?
                 .into_iter()
-                .map(|x| x.0.into_iter())
-                .flatten()
+                .flat_map(|x| x.0.into_iter())
                 .collect();
 
         // bool type
