@@ -482,7 +482,7 @@ fn get_struct_names_types(input: &DataStruct) -> (Vec<Ident>, Vec<&Type>, Struct
 
 fn get_name_modified(idents: &[Ident], append: &str) -> Vec<Ident> {
     idents
-        .into_iter()
+        .iter()
         .map(|ident|{
             format_ident!("__{}_binread_generated_{}", ident.to_string(), append)
         })
@@ -510,7 +510,7 @@ fn get_struct_field_attrs(input: &DataStruct) -> Result<Vec<FieldLevelAttrs>, Co
 
 fn get_passed_args(field_attrs: &[FieldLevelAttrs]) -> Vec<TokenStream> {
     field_attrs
-        .into_iter()
+        .iter()
         .map(|field_attr| {
             match &field_attr.args {
                 PassedArgs::List(list) => {
@@ -609,7 +609,7 @@ fn get_modified_options<'a, I: IntoIterator<Item = (IdentStr<'a>, TokenStream)>>
 
 fn get_new_options(idents: &[Ident], field_attrs: &[FieldLevelAttrs]) -> Vec<TokenStream> {
     field_attrs
-        .into_iter()
+        .iter()
         .zip(idents)
         .map(|(a, b)| get_modified_options(get_name_option_pairs_ident_expr(a, b)))
         .collect()
@@ -671,7 +671,7 @@ fn get_assertions(asserts: &[Assert]) -> Vec<TokenStream> {
 fn get_field_assertions(field_attrs: &[FieldLevelAttrs]) -> Vec<TokenStream> {
     let handle_error = handle_error();
     field_attrs
-        .into_iter()
+        .iter()
         .map(|field_attrs|{
             let asserts = field_attrs.assert
                 .iter()
