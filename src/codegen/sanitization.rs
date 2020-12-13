@@ -1,5 +1,5 @@
 ///! Utilities for helping sanitize macro
-use proc_macro2::{TokenStream, Ident};
+use proc_macro2::TokenStream;
 use quote::{quote, format_ident, ToTokens};
 
 macro_rules! from_crate {

@@ -8,9 +8,8 @@ pub(crate) use spanned_value::SpannedValue;
 
 use proc_macro2::TokenStream;
 use crate::compiler_error::{CompileError, SpanError};
-use syn::{Expr, Field, Ident, Lit, Meta, NestedMeta, parse::Parse, Path, Type, spanned::Spanned};
+use syn::{Expr, Ident, Lit, parse::Parse, Type, spanned::Spanned};
 use quote::ToTokens;
-use std::str::FromStr;
 use syn::export::TokenStream2;
 
 use self::parser::MetaList;

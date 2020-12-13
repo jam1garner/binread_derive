@@ -1,8 +1,7 @@
 use super::*;
-use super::parser::{TopLevelAttr, MetaAttrList, BinreadAttribute, MetaList, MetaLit};
+use super::parser::{TopLevelAttr, MetaAttrList, MetaList, MetaLit};
 use syn::spanned::Spanned;
 use syn::parse::Parse;
-use proc_macro2::Span;
 use crate::CompileError;
 use quote::ToTokens;
 use super::parser::ImportArg;

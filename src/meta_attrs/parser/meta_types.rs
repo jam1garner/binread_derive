@@ -1,6 +1,4 @@
 use super::*;
-use proc_macro2::Span;
-use syn::spanned::Spanned;
 use super::super::PassedValues;
 
 /// MetaExpr represents a key/expr pair

@@ -1,10 +1,8 @@
-#![allow(unused_imports)]
 extern crate proc_macro;
 
 use proc_macro::TokenStream;
-use quote::{quote, quote_spanned, format_ident, ToTokens};
+use quote::{quote, quote_spanned};
 use syn::{
-    spanned::Spanned,
     parse_macro_input,
     DeriveInput
 };
@@ -16,7 +14,7 @@ mod compiler_error;
 
 use codegen::sanitization::*;
 use meta_attrs::FieldLevelAttrs;
-use proc_macro2::{TokenStream as TokenStream2, Span};
+use proc_macro2::TokenStream as TokenStream2;
 use compiler_error::{CompileError, SpanError};
 
 fn generate_derive(input: DeriveInput, code: codegen::GeneratedCode) -> TokenStream {

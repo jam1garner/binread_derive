@@ -13,7 +13,7 @@ use crate::{
 };
 use proc_macro2::TokenStream;
 use quote::{quote, format_ident, ToTokens};
-use syn::{Ident, DeriveInput, Type, DataStruct, DataEnum, Expr, Field, Fields, Variant, punctuated::Punctuated, token::Comma};
+use syn::{Ident, DeriveInput, Type, DataStruct, DataEnum, Field, Fields, Variant, punctuated::Punctuated, token::Comma};
 
 pub fn generate(input: &DeriveInput, tla: &TopLevelAttrs) -> Result<TokenStream, CompileError> {
     if let Some(map) = &tla.map {
