@@ -108,7 +108,7 @@ impl TopLevelAttrs {
         let magic = get_only_first(&magics, "Cannot define multiple magic values")?;
 
         // TODO: this is basically get_only_first, but for incompatible attributes
-        if imports.len() > 0 && import_tuples.len() > 0 {
+        if !imports.is_empty() && !import_tuples.is_empty() {
             let mut spans = imports.iter()
                 .map(Spanned::span)
                 .chain(import_tuples.iter().map(Spanned::span));

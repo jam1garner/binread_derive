@@ -116,7 +116,7 @@ impl FieldLevelAttrs {
         let pad_size_to = get_fla_type!(attrs.PadSizeTo);
 
         // TODO: This is basically get_only_first but for mutually incompatible attributes. refactor?
-        if args.len() > 0 && args_tuple.len() > 0 {
+        if !args.is_empty() && !args_tuple.is_empty() {
             let mut spans = args.iter()
                 .map(Spanned::span)
                 .chain(args_tuple.iter().map(Spanned::span));
