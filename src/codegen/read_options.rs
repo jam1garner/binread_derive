@@ -95,7 +95,7 @@ fn generate_enum(input: &DeriveInput, tla: &TopLevelAttrs, en: &DataEnum) -> Res
     }
 
     // return_all_errors is default behavior
-    let return_all_errors = *tla.return_all_errors || !*tla.return_all_errors;
+    let return_all_errors = !*tla.return_unexpected_error;
 
     let enum_name = &input.ident;
     let variant_funcs =
