@@ -94,7 +94,7 @@ impl TopLevelAttrs {
         let return_unexpected_errors = get_tla_type!(attrs.ReturnUnexpectedError);
 
         if return_all_errors.len() + return_unexpected_errors.len() > 1 {
-            join_spans_err(&bigs, &littles, "Cannot set more than one return type")?;
+            join_spans_err(&return_all_errors, &return_unexpected_errors, "Cannot set more than one return type")?;
         }
 
         let magics = get_tla_type!(attrs.Magic);
