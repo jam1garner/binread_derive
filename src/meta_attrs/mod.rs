@@ -8,9 +8,8 @@ pub(crate) use spanned_value::SpannedValue;
 
 use proc_macro2::TokenStream;
 use crate::compiler_error::{CompileError, SpanError};
-use syn::{Expr, Field, Ident, Lit, Meta, NestedMeta, parse::Parse, Path, Type, spanned::Spanned};
+use syn::{Expr, Ident, Lit, parse::Parse, Type, spanned::Spanned};
 use quote::ToTokens;
-use std::str::FromStr;
 use syn::export::TokenStream2;
 
 use self::parser::MetaList;
@@ -45,7 +44,7 @@ impl PassedValues {
 #[derive(Debug, Clone)]
 pub enum Imports {
     List(Vec<Ident>, Vec<Type>),
-    Tuple(Ident, Type)
+    Tuple(Ident, Box<Type>)
 }
 
 impl Default for Imports {
@@ -103,6 +102,28 @@ pub enum MagicType {
     Verbatim
 }
 
+fn check_mutually_exclusive<'a, S1, S2, Iter1, Iter2>(a: Iter1, b: Iter2, msg: impl Into<String>) -> Result<(), CompileError>
+    where S1: Spanned + 'a,
+          S2: Spanned + 'a,
+          Iter1: Iterator<Item = &'a S1>,
+          Iter2: Iterator<Item = &'a S2>,
+{
+    let mut a = a.peekable();
+    let mut b = b.peekable();
+    if a.peek().is_some() && b.peek().is_some() {
+        let mut spans = a.map(Spanned::span).chain(b.map(Spanned::span));
+        let first = spans.next().unwrap();
+        let span = spans.fold(first, |x, y| x.join(y).unwrap());
+
+        Err(CompileError::SpanError(SpanError::new(
+            span,
+            msg
+        )))
+    } else {
+        Ok(())
+    }
+}
+
 fn convert_assert<K>(assert: &MetaList<K, Expr>) -> Result<Assert, CompileError>
     where K: Parse + Spanned,
 {
@@ -123,4 +144,30 @@ fn convert_assert<K>(assert: &MetaList<K, Expr>) -> Result<Assert, CompileError>
         cond.into_token_stream(),
         err.map(ToTokens::into_token_stream)
     ))
+}
+
+fn first_span_true(mut vals: impl Iterator<Item = impl Spanned>) -> SpannedValue<bool> {
+    if let Some(val) = vals.next() {
+        SpannedValue::new(
+            true,
+            val.span()
+        )
+    } else {
+        Default::default()
+    }
+}
+
+fn get_only_first<'a, S: Spanned>(list: impl Iterator<Item = &'a S>, msg: impl Into<String>) -> Result<Option<&'a S>, CompileError> {
+    let mut list = list.peekable();
+    let first = list.next();
+
+    if list.peek().is_none() {
+        Ok(first)
+    } else {
+        let span = list.map(Spanned::span).fold(Spanned::span(first.unwrap()), |x, y| x.join(y).unwrap());
+        Err(CompileError::SpanError(SpanError::new(
+            span,
+            msg
+        )))
+    }
 }

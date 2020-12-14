@@ -1,6 +1,4 @@
 use super::*;
-use proc_macro2::Span;
-use syn::spanned::Spanned;
 use super::super::PassedValues;
 
 /// MetaExpr represents a key/expr pair
@@ -44,10 +42,12 @@ pub struct MetaList<Keyword: Parse, ItemType: Parse> {
 
 impl<Keyword: Parse, ItemType: Parse> Parse for MetaList<Keyword, ItemType> {
     fn parse(input: ParseStream) -> syn::Result<Self> {
+        let ident = input.parse()?;
         let content;
+        let parens = parenthesized!(content in input);
         Ok(MetaList {
-            ident: input.parse()?,
-            parens: parenthesized!(content in input),
+            ident,
+            parens,
             fields: content.parse_terminated::<_, Token![,]>(ItemType::parse)?.into_iter().collect()
         })
     }

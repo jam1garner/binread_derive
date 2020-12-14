@@ -13,7 +13,7 @@ use crate::{
 };
 use proc_macro2::TokenStream;
 use quote::{quote, format_ident, ToTokens};
-use syn::{Ident, DeriveInput, Type, DataStruct, DataEnum, Expr, Field, Fields, Variant, punctuated::Punctuated, token::Comma};
+use syn::{Ident, DeriveInput, Type, DataStruct, DataEnum, Field, Fields, Variant, punctuated::Punctuated, token::Comma};
 
 pub fn generate(input: &DeriveInput, tla: &TopLevelAttrs) -> Result<TokenStream, CompileError> {
     if let Some(map) = &tla.map {
@@ -30,11 +30,7 @@ pub fn generate(input: &DeriveInput, tla: &TopLevelAttrs) -> Result<TokenStream,
 }
 
 fn no_variant_data(v: &Variant) -> bool {
-    if let Fields::Unit = v.fields {
-        true
-    } else {
-        false
-    }
+    matches!(v.fields, Fields::Unit)
 }
 
 fn magic_type_of(variant: &Variant) -> Option<(MagicType, TokenStream)> {
@@ -95,7 +91,7 @@ fn generate_enum(input: &DeriveInput, tla: &TopLevelAttrs, en: &DataEnum) -> Res
     }
 
     // return_all_errors is default behavior
-    let return_all_errors = *tla.return_all_errors || !*tla.return_all_errors;
+    let return_all_errors = !*tla.return_unexpected_error;
 
     let enum_name = &input.ident;
     let variant_funcs =
@@ -275,9 +271,8 @@ fn generate_struct(input: &DeriveInput, tla: &TopLevelAttrs, ds: &DataStruct) ->
     })
 }
 
-#[allow(unused_variables)]
 fn generate_body(
-        tla: &TopLevelAttrs, field_attrs: &[FieldLevelAttrs], name: &Vec<Ident>, ty: Vec<&Type>
+        tla: &TopLevelAttrs, field_attrs: &[FieldLevelAttrs], name: &[Ident], ty: Vec<&Type>
     ) -> Result<TokenStream, CompileError>
 {
     let count = name.len();
@@ -289,10 +284,10 @@ fn generate_body(
 
     // Repeat constants
     let repeat_read_method_ident = filter_by_ignore(&field_attrs, iter::repeat(READ_METHOD));
-    let repeat_options_ident = iter::repeat(OPTIONS);
+    let _repeat_options_ident = iter::repeat(OPTIONS);
     let repeat_reader_ident = iter::repeat(READER).take(count).collect::<Vec<_>>();
-    let repeat_opt_ident = iter::repeat(OPT);
-    let default = iter::repeat(DEFAULT);
+    let _repeat_opt_ident = iter::repeat(OPT);
+    let _default = iter::repeat(DEFAULT);
 
     let possible_set_offset = get_possible_set_offset(&field_attrs, &name_options);
 
@@ -352,7 +347,7 @@ fn generate_body(
                     #skip_before
                     #align_before
                     #pad_size_to_prep
-                    let __binread__temp = #possible_some(
+                    let __binread_temp = #possible_some(
                         #after_parse_applier(
                             #possible_immediate_derefs,
                             #maps(#possible_try_conversion(#repeat_read_method_ident(
@@ -368,7 +363,7 @@ fn generate_body(
                     #skip_after
                     #align_after
 
-                    __binread__temp
+                    __binread_temp
                 } #possible_else;
             #field_asserts
             #restore_position
@@ -486,7 +481,7 @@ fn get_struct_names_types(input: &DataStruct) -> (Vec<Ident>, Vec<&Type>, Struct
 
 fn get_name_modified(idents: &[Ident], append: &str) -> Vec<Ident> {
     idents
-        .into_iter()
+        .iter()
         .map(|ident|{
             format_ident!("__{}_binread_generated_{}", ident.to_string(), append)
         })
@@ -514,7 +509,7 @@ fn get_struct_field_attrs(input: &DataStruct) -> Result<Vec<FieldLevelAttrs>, Co
 
 fn get_passed_args(field_attrs: &[FieldLevelAttrs]) -> Vec<TokenStream> {
     field_attrs
-        .into_iter()
+        .iter()
         .map(|field_attr| {
             match &field_attr.args {
                 PassedArgs::List(list) => {
@@ -613,7 +608,7 @@ fn get_modified_options<'a, I: IntoIterator<Item = (IdentStr<'a>, TokenStream)>>
 
 fn get_new_options(idents: &[Ident], field_attrs: &[FieldLevelAttrs]) -> Vec<TokenStream> {
     field_attrs
-        .into_iter()
+        .iter()
         .zip(idents)
         .map(|(a, b)| get_modified_options(get_name_option_pairs_ident_expr(a, b)))
         .collect()
@@ -675,7 +670,7 @@ fn get_assertions(asserts: &[Assert]) -> Vec<TokenStream> {
 fn get_field_assertions(field_attrs: &[FieldLevelAttrs]) -> Vec<TokenStream> {
     let handle_error = handle_error();
     field_attrs
-        .into_iter()
+        .iter()
         .map(|field_attrs|{
             let asserts = field_attrs.assert
                 .iter()

@@ -9,9 +9,8 @@ use keywords as kw;
 pub(crate) mod parse_any;
 
 pub(crate) use meta_types::*;
-use proc_macro::TokenStream;
-use syn::parse::{Parse, ParseStream, Parser};
-use syn::{parenthesized, parse_macro_input, token, Field, Ident, Token, Lit, Path, Expr};
+use syn::parse::{Parse, ParseStream};
+use syn::{parenthesized, token, Ident, Token, Lit, Path, Expr};
 use syn::ExprClosure;
 use syn::punctuated::Punctuated;
 use proc_macro2::TokenStream as TokenStream2;
@@ -32,7 +31,7 @@ parse_any!{
 
         // args type
         Import(MetaList<kw::import, ImportArg>),
-        ImportTuple(ImportArgTuple),
+        ImportTuple(Box<ImportArgTuple>),
         Assert(MetaList<kw::assert, Expr>),
         PreAssert(MetaList<kw::pre_assert, Expr>),
         Map(MetaFunc<kw::map>),
@@ -121,10 +120,12 @@ pub struct ImportArgTuple {
 
 impl Parse for ImportArgTuple {
     fn parse(input: ParseStream) -> syn::Result<Self> {
+        let ident = input.parse()?;
         let content;
+        let parens = parenthesized!(content in input);
         Ok(ImportArgTuple {
-            ident: input.parse()?,
-            parens: parenthesized!(content in input),
+            ident,
+            parens,
             arg: content.parse()?
         })
     }

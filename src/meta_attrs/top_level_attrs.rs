@@ -1,8 +1,7 @@
 use super::*;
-use super::parser::{TopLevelAttr, MetaAttrList, BinreadAttribute, MetaList, MetaLit};
+use super::parser::{TopLevelAttr, MetaAttrList, MetaList, MetaLit};
 use syn::spanned::Spanned;
 use syn::parse::Parse;
-use proc_macro2::Span;
 use crate::CompileError;
 use quote::ToTokens;
 use super::parser::ImportArg;
@@ -44,7 +43,6 @@ macro_rules! get_tla_type {
                     None
                 }
             })
-            .collect::<Vec<_>>()
     };
 }
 
@@ -68,7 +66,7 @@ impl TopLevelAttrs {
         Self::from_attrs(&input.attrs)
     }
 
-    pub fn from_attrs(attrs: &Vec<syn::Attribute>) -> Result<Self, CompileError> {
+    pub fn from_attrs(attrs: &[syn::Attribute]) -> Result<Self, CompileError> {
         let attrs: Vec<TopLevelAttr> =
             attrs
                 .iter()
@@ -76,8 +74,7 @@ impl TopLevelAttrs {
                 .map(tlas_from_attribute)
                 .collect::<Result<Vec<TlaList>, CompileError>>()?
                 .into_iter()
-                .map(|x| x.0.into_iter())
-                .flatten()
+                .flat_map(|x| x.0.into_iter())
                 .collect();
 
         Self::from_top_level_attrs(attrs)
@@ -87,15 +84,15 @@ impl TopLevelAttrs {
         let bigs = get_tla_type!(attrs.Big);
         let littles = get_tla_type!(attrs.Little);
 
-        if bigs.len() + littles.len() > 1 {
-            join_spans_err(&bigs, &littles, "Cannot set endianess more than once")?;
+        if bigs.clone().take(2).count() + littles.clone().take(2).count() > 1 {
+            return join_spans_err(bigs, littles, "Cannot set endianess more than once");
         }
 
         let return_all_errors = get_tla_type!(attrs.ReturnAllErrors);
         let return_unexpected_errors = get_tla_type!(attrs.ReturnUnexpectedError);
 
-        if return_all_errors.len() + return_unexpected_errors.len() > 1 {
-            join_spans_err(&bigs, &littles, "Cannot set more than one return type")?;
+        if return_all_errors.clone().take(2).count() + return_unexpected_errors.clone().take(2).count() > 1 {
+            return join_spans_err(return_all_errors, return_unexpected_errors, "Cannot set more than one return type");
         }
 
         let magics = get_tla_type!(attrs.Magic);
@@ -105,29 +102,16 @@ impl TopLevelAttrs {
         let pre_asserts = get_tla_type!(attrs.PreAssert);
         let map = get_tla_type!(attrs.Map);
 
-        let magic = get_only_first(&magics, "Cannot define multiple magic values")?;
+        let magic = get_only_first(magics, "Cannot define multiple magic values")?;
 
-        // TODO: this is basically get_only_first, but for incompatible attributes
-        if imports.len() > 0 && import_tuples.len() > 0 {
-            let mut spans = imports.iter()
-                .map(Spanned::span)
-                .chain(import_tuples.iter().map(Spanned::span));
+        check_mutually_exclusive(imports.clone(), import_tuples.clone(), "Cannot mix import and import_tuple")?;
 
-            let first = spans.next().unwrap();
-            let span = spans.fold(first, |x, y| x.join(y).unwrap());
-
-            return Err(CompileError::SpanError(SpanError::new(
-                span,
-                "Cannot mix import and import_tuple"
-            )));
-        }
-
-        let import = get_only_first(&imports, "Cannot define multiple sets of arguments")?;
-        let import_tuple = get_only_first(&import_tuples, "Cannot define multiple sets of tuple arguments")?;
-        let map = get_only_first(&map, "Cannot define multiple mapping functions")?;
+        let import = get_only_first(imports, "Cannot define multiple sets of arguments")?;
+        let import_tuple = get_only_first(import_tuples, "Cannot define multiple sets of tuple arguments")?;
+        let map = get_only_first(map, "Cannot define multiple mapping functions")?;
 
         Ok(Self {
-            assert: asserts.into_iter().map(convert_assert).collect::<Result<_, _>>()?,
+            assert: asserts.map(convert_assert).collect::<Result<_, _>>()?,
             big: first_span_true(bigs),
             little: first_span_true(littles),
             magic: magic.map(magic_to_tokens),
@@ -135,13 +119,13 @@ impl TopLevelAttrs {
             import: convert_import(import, import_tuple).unwrap_or_default(),
             return_all_errors: first_span_true(return_all_errors),
             return_unexpected_error: first_span_true(return_unexpected_errors),
-            pre_assert: pre_asserts.into_iter().map(convert_assert).collect::<Result<_, _>>()?,
+            pre_assert: pre_asserts.map(convert_assert).collect::<Result<_, _>>()?,
             map: map.map(|x| x.to_token_stream()),
         })
     }
 }
 
-fn magic_to_type(magic: &&MetaLit<impl syn::parse::Parse>) -> MagicType {
+fn magic_to_type(magic: &MetaLit<impl syn::parse::Parse>) -> MagicType {
     let magic = &magic.lit;
     match magic {
         Lit::Str(_) => MagicType::Str,
@@ -155,7 +139,7 @@ fn magic_to_type(magic: &&MetaLit<impl syn::parse::Parse>) -> MagicType {
     }
 }
 
-fn magic_to_tokens(magic: &&MetaLit<impl syn::parse::Parse>) -> TokenStream {
+fn magic_to_tokens(magic: &MetaLit<impl syn::parse::Parse>) -> TokenStream {
     let magic = &magic.lit;
     if let Lit::Str(_) | Lit::ByteStr(_) = magic {
         quote::quote!{
@@ -166,9 +150,10 @@ fn magic_to_tokens(magic: &&MetaLit<impl syn::parse::Parse>) -> TokenStream {
     }
 }
 
-fn convert_import<K: Parse>(import: Option<&&MetaList<K, ImportArg>>, import_tuple: Option<&&ImportArgTuple>) -> Option<Imports> {
+fn convert_import<K: Parse>(import: Option<&MetaList<K, ImportArg>>, import_tuple: Option<impl AsRef<ImportArgTuple>>) -> Option<Imports> {
     if let Some(tuple) = import_tuple {
-        Some(Imports::Tuple(tuple.arg.ident.clone(), tuple.arg.ty.clone()))
+        let tuple = tuple.as_ref();
+        Some(Imports::Tuple(tuple.arg.ident.clone(), tuple.arg.ty.clone().into()))
     } else if let Some(list) = import {
         let (idents, tys): (Vec<_>, Vec<_>) =
             list.fields
@@ -183,41 +168,13 @@ fn convert_import<K: Parse>(import: Option<&&MetaList<K, ImportArg>>, import_tup
     }
 }
 
-fn get_only_first<'a, S: Spanned>(list: &'a Vec<S>, msg: &str) -> Result<Option<&'a S>, CompileError> {
-    if list.len() > 1 {
-        let mut spans = list.iter().map(Spanned::span);
-
-        let first = spans.next().unwrap();
-        let span = spans.fold(first, |x, y| x.join(y).unwrap());
-
-        return Err(CompileError::SpanError(SpanError::new(
-            span,
-            msg
-        )));
-    }
-    
-    Ok(list.get(0))
-}
-
-fn first_span_true<S: Spanned>(vals: Vec<S>) -> SpannedValue<bool> {
-    if let Some(val) = vals.get(0) {
-        SpannedValue::new(
-            true,
-            val.span()
-        )
-    } else {
-        Default::default()
-    }
-}
-
-fn join_spans_err<S1, S2>(s1: &Vec<S1>, s2: &Vec<S2>, msg: &str) -> Result<(), CompileError>
-    where S1: Spanned,
-          S2: Spanned,
+fn join_spans_err<'a, Iter1, Iter2, S1, S2>(s1: Iter1, s2: Iter2, msg: impl Into<String>) -> Result<TopLevelAttrs, CompileError>
+    where Iter1: Iterator<Item = &'a S1>,
+          Iter2: Iterator<Item = &'a S2>,
+          S1: Spanned + 'a,
+          S2: Spanned + 'a,
 {
-    let mut spans =
-        s1.iter().map(Spanned::span)
-            .chain(s2.iter().map(Spanned::span));
-
+    let mut spans = s1.map(Spanned::span).chain(s2.map(Spanned::span));
     let first = spans.next().unwrap();
     let span = spans.fold(first, |x, y| x.join(y).unwrap());
 

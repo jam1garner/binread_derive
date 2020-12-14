@@ -29,17 +29,6 @@ macro_rules! parse_ty {
     }
 }
 
-macro_rules! parse_ty_print {
-    ($name:ident, $str:literal, $ty:ty) => {
-        #[test]
-        fn $name() {
-            let tokens: TokenStream2 = ($str).parse().unwrap();
-            let val: $ty = syn::parse2(tokens).unwrap();
-            dbg!(val);
-        }
-    }
-}
-
 macro_rules! parse_ty_fail {
     ($name:ident, $str:literal, $ty:ty) => {
         #[test]

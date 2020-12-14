@@ -57,7 +57,6 @@ macro_rules! get_fla_type {
                     None
                 }
             })
-            .collect::<Vec<_>>()
     };
 }
 
@@ -72,20 +71,19 @@ impl FieldLevelAttrs {
                 .map(flas_from_attribute)
                 .collect::<Result<Vec<FlaList>, CompileError>>()?
                 .into_iter()
-                .map(|x| x.0.into_iter())
-                .flatten()
+                .flat_map(|x| x.0.into_iter())
                 .collect();
 
         // bool type
         let big = first_span_true(get_fla_type!(attrs.Big));
         let little = first_span_true(get_fla_type!(attrs.Little));
-        let default = !get_fla_type!(attrs.Default).is_empty();
-        let ignore = !get_fla_type!(attrs.Ignore).is_empty();
-        let deref_now = !get_fla_type!(attrs.DerefNow).is_empty();
-        let restore_position = !get_fla_type!(attrs.RestorePosition).is_empty();
-        let postprocess_now = !get_fla_type!(attrs.PostProcessNow).is_empty();
-        let do_try = !get_fla_type!(attrs.Try).is_empty();
-        let temp = !get_fla_type!(attrs.Temp).is_empty();
+        let default = get_fla_type!(attrs.Default).next().is_some();
+        let ignore = get_fla_type!(attrs.Ignore).next().is_some();
+        let deref_now = get_fla_type!(attrs.DerefNow).next().is_some();
+        let restore_position = get_fla_type!(attrs.RestorePosition).next().is_some();
+        let postprocess_now = get_fla_type!(attrs.PostProcessNow).next().is_some();
+        let do_try = get_fla_type!(attrs.Try).next().is_some();
+        let temp = get_fla_type!(attrs.Temp).next().is_some();
 
         // func assignment type
         let map = get_fla_type!(attrs.Map);
@@ -115,26 +113,13 @@ impl FieldLevelAttrs {
         let seek_before = get_fla_type!(attrs.SeekBefore);
         let pad_size_to = get_fla_type!(attrs.PadSizeTo);
 
-        // TODO: This is basically get_only_first but for mutually incompatible attributes. refactor?
-        if args.len() > 0 && args_tuple.len() > 0 {
-            let mut spans = args.iter()
-                .map(Spanned::span)
-                .chain(args_tuple.iter().map(Spanned::span));
-
-            let first = spans.next().unwrap();
-            let span = spans.fold(first, |x, y| x.join(y).unwrap());
-
-            return Err(CompileError::SpanError(SpanError::new(
-                span,
-                "Conflicting instances of args and args_tuple"
-            )));
-        }
+        check_mutually_exclusive(args.clone(), args_tuple.clone(), "Conflicting instances of args and args_tuple")?;
 
         macro_rules! only_first {
             ($($a:ident),*) => {
                 $(
                     let $a = get_only_first(
-                        &$a,
+                        $a,
                         concat!("Conflicting instances of ", stringify!($a))
                     )?.map(|x| x.get());
                 )*
@@ -181,36 +166,9 @@ impl FieldLevelAttrs {
             parse_with,
             map,
             args,
-            assert: asserts.into_iter().map(convert_assert).collect::<Result<_, _>>()?,
+            assert: asserts.map(convert_assert).collect::<Result<_, _>>()?,
             magic,
         })
-    }
-}
-
-fn get_only_first<'a, S: Spanned>(list: &'a Vec<S>, msg: &str) -> Result<Option<&'a S>, CompileError> {
-    if list.len() > 1 {
-        let mut spans = list.iter().map(Spanned::span);
-
-        let first = spans.next().unwrap();
-        let span = spans.fold(first, |x, y| x.join(y).unwrap());
-
-        return Err(CompileError::SpanError(SpanError::new(
-            span,
-            msg
-        )));
-    }
-    
-    Ok(list.get(0))
-}
-
-fn first_span_true<S: Spanned>(vals: Vec<S>) -> SpannedValue<bool> {
-    if let Some(val) = vals.get(0) {
-        SpannedValue::new(
-            true,
-            val.span()
-        )
-    } else {
-        Default::default()
     }
 }
 
