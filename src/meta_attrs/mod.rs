@@ -10,7 +10,7 @@ use proc_macro2::TokenStream;
 use crate::compiler_error::{CompileError, SpanError};
 use syn::{Expr, Ident, Lit, parse::Parse, Type, spanned::Spanned};
 use quote::ToTokens;
-use syn::export::TokenStream2;
+use proc_macro2::TokenStream as TokenStream2;
 
 use self::parser::MetaList;
 
